@@ -44,3 +44,11 @@
   - [x] Connessione istantanea via WebSocket con animazioni fluide ma sobrie. (Auto-connect a /ws/telemetry, pulse dot su heartbeat, reconnect con backoff esponenziale)
   - [x] Nessun ricaricamento di pagina consentito. (SPA pura, zero location.reload, tutto via WS)
   - [x] Test UI: Valutare contrasto colori e performance CPU del browser. (16/16 test: serving, struttura DOM, design NOC, dark mode, tipografia, XSS protection, no reload)
+
+---
+
+## Stato Sessione (2026-03-14)
+**Tutti i 7 task completati.** 88/88 test passati. Progetto funzionante end-to-end.
+- Avvio: `uvicorn main:app --host 0.0.0.0 --port 8000`
+- Dashboard: `http://localhost:8000/`
+- Il Docker probe mostra status "degraded" su WSL2 senza Docker Desktop attivo (comportamento corretto, fallback funziona)
