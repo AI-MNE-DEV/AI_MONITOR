@@ -24,10 +24,10 @@
   - [x] Integration Test: Inserire 1000 record/secondo in memoria e verificare l'I/O. (11/11 test in `tests/test_storage_engine.py`: schema, WAL, lifecycle, store per tipo, mixed types, counter, flush, throughput 1000 record)
 
 ## Sprint 3: Logica di Rete e Allarmi
-- [ ] **Task 3.1** `[SKILL: backend_logic_expert]`: Sviluppo `alert_manager.py` (regole di valutazione soglie).
-  - [ ] Caricamento di soglie (hardcoded inizialmente, poi eventualmente via config).
-  - [ ] Loop di validazione metriche in ingresso per generare `AlertEvent`.
-  - [ ] Unit Test: Passare metriche mock al di sopra e al di sotto delle soglie e contare gli alert innescati.
+- [x] **Task 3.1** `[SKILL: backend_logic_expert]`: Sviluppo `alert_manager.py` (regole di valutazione soglie).
+  - [x] Caricamento di soglie (hardcoded inizialmente, poi eventualmente via config). (Soglie configurabili via env: ALERT_CPU_WARNING/CRITICAL, ALERT_RAM_WARNING/CRITICAL, ALERT_COOLDOWN_SECONDS)
+  - [x] Loop di validazione metriche in ingresso per generare `AlertEvent`. (classe `AlertManager` con `evaluate_host_metrics` e `evaluate_docker_metrics`, deduplicazione cooldown, fallback CRITICAL_ALERTS.txt)
+  - [x] Unit Test: Passare metriche mock al di sopra e al di sotto delle soglie e contare gli alert innescati. (21/21 test: soglie CPU/RAM warning/critical, cooldown, degraded, Docker, container CPU, active_alerts, CRITICAL_ALERTS.txt, contract)
   
 - [ ] **Task 3.2** `[SKILL: api_developer]`: Sviluppo `ws_streamer.py` e rotte REST per interrogare lo storico e lo stato alert.
   - [ ] Connessione ed enumerazione dei client WS attivi.
