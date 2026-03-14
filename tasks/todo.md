@@ -18,10 +18,10 @@
   - [x] Meccanismo di fallback per disconnessione o socket assente. (MAX_RETRIES=3, backoff esponenziale, fallback `DockerMetrics(status="degraded")`)
   - [x] Unit Test: Mockare l'SDK Docker e testare sia l'happy path che la disconnessione. (15/15 test in `tests/test_docker_probe.py`: CPU calc, RAM calc, happy path, mixed containers, socket failure, retry, stats failure, no containers, event listener, serializzazione, roundtrip)
   
-- [ ] **Task 2.2** `[SKILL: database_engineer]`: Sviluppo `storage_engine.py` (scrittura asincrona/bufferizzata per non bloccare i thread in caso di I/O lento).
-  - [ ] Setup schema DB e connessione SQLite con parametro WAL.
-  - [ ] Worker thread o asyncio queue per scritture bufferizzate/asincrone.
-  - [ ] Integration Test: Inserire 1000 record/secondo in memoria e verificare l'I/O.
+- [x] **Task 2.2** `[SKILL: database_engineer]`: Sviluppo `storage_engine.py` (scrittura asincrona/bufferizzata per non bloccare i thread in caso di I/O lento).
+  - [x] Setup schema DB e connessione SQLite con parametro WAL. (3 tabelle: host_metrics, docker_metrics, alert_events; WAL + busy_timeout=5000; schema idempotente con IF NOT EXISTS)
+  - [x] Worker thread o asyncio queue per scritture bufferizzate/asincrone. (classe `StorageEngine` con `queue.Queue`, writer thread daemon, batch insert da 50 record, graceful shutdown con flush)
+  - [x] Integration Test: Inserire 1000 record/secondo in memoria e verificare l'I/O. (11/11 test in `tests/test_storage_engine.py`: schema, WAL, lifecycle, store per tipo, mixed types, counter, flush, throughput 1000 record)
 
 ## Sprint 3: Logica di Rete e Allarmi
 - [ ] **Task 3.1** `[SKILL: backend_logic_expert]`: Sviluppo `alert_manager.py` (regole di valutazione soglie).
