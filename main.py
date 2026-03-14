@@ -15,7 +15,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
+from pathlib import Path
+
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 
 from alert_manager import AlertManager
 from contracts import DockerMetrics, HostMetrics, SystemStatus
@@ -137,6 +140,15 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+_STATIC_DIR: Path = Path(__file__).parent / "static"
+
+
+@app.get("/")
+async def serve_dashboard() -> FileResponse:
+    """Serve la War Room Dashboard SPA."""
+    return FileResponse(_STATIC_DIR / "index.html", media_type="text/html")
 
 
 @app.get("/health")

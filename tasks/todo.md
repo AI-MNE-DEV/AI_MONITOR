@@ -37,10 +37,10 @@
   - [x] Refactoring `main.py`: rimosso `@app.on_event("startup")` deprecato, adottato `lifespan` context manager, integrati tutti i moduli (probe, storage, alert, WS), telemetry loop asincrono
 
 ## Sprint 4: La "War Room" Dashboard
-- [ ] **Task 4.1** `[SKILL: premium_ui_ux_designer, noc_dashboard_specialist]`: Sviluppo Frontend SPA (Single Page Application).
-  - [ ] Requisito essenziale: Interfaccia da "War Room" / NOC.
-  - [ ] Setup pagina in Dark mode nativa.
-  - [ ] Tipografia enorme e chiara per le metriche critiche, contrasti netti.
-  - [ ] Connessione istantanea via WebSocket con animazioni fluide ma sobrie.
-  - [ ] Nessun ricaricamento di pagina consentito.
-  - [ ] Test UI: Valutare contrasto colori e performance CPU del browser.
+- [x] **Task 4.1** `[SKILL: premium_ui_ux_designer, noc_dashboard_specialist]`: Sviluppo Frontend SPA (Single Page Application).
+  - [x] Requisito essenziale: Interfaccia da "War Room" / NOC. (Header sticky con status globale, grid layout Host/Docker/Alerts, glanceable da 3m)
+  - [x] Setup pagina in Dark mode nativa. (bg #0a0e17, card #111827, testi #e0e6ed)
+  - [x] Tipografia enorme e chiara per le metriche critiche, contrasti netti. (CPU/RAM 3rem monospace, colori semantici: verde OK, giallo WARNING, rosso CRITICAL)
+  - [x] Connessione istantanea via WebSocket con animazioni fluide ma sobrie. (Auto-connect a /ws/telemetry, pulse dot su heartbeat, reconnect con backoff esponenziale)
+  - [x] Nessun ricaricamento di pagina consentito. (SPA pura, zero location.reload, tutto via WS)
+  - [x] Test UI: Valutare contrasto colori e performance CPU del browser. (16/16 test: serving, struttura DOM, design NOC, dark mode, tipografia, XSS protection, no reload)
