@@ -12,11 +12,11 @@
   - [x] Unit Test: Test della generazione di `HostMetrics` valide sui data contracts correnti. (10/10 test in `tests/test_host_probe.py`: happy path, retry, degraded fallback, serializzazione JSON, roundtrip)
 
 ## Sprint 2: Integrazione Event-Driven e Storage
-- [ ] **Task 2.1** `[SKILL: docker_expert]`: Sviluppo `docker_probe.py`.
-  - [ ] Implementazione asincrona del polling metriche (CPU/RAM per container).
-  - [ ] Implementazione loop ascolto Docker Event Stream (`start`, `stop`, `die`) per rilevamento istantaneo nuovi container o crash.
-  - [ ] Meccanismo di fallback per disconnessione o socket assente.
-  - [ ] Unit Test: Mockare l'SDK Docker e testare sia l'happy path che la disconnessione.
+- [x] **Task 2.1** `[SKILL: docker_expert]`: Sviluppo `docker_probe.py`.
+  - [x] Implementazione asincrona del polling metriche (CPU/RAM per container). (`collect_docker_metrics_sync` + async wrapper `collect_docker_metrics` via `asyncio.to_thread`; formula CPU ufficiale Docker, RAM con sottrazione cache)
+  - [x] Implementazione loop ascolto Docker Event Stream (`start`, `stop`, `die`) per rilevamento istantaneo nuovi container o crash. (`listen_docker_events` con callback, reconnect con backoff esponenziale)
+  - [x] Meccanismo di fallback per disconnessione o socket assente. (MAX_RETRIES=3, backoff esponenziale, fallback `DockerMetrics(status="degraded")`)
+  - [x] Unit Test: Mockare l'SDK Docker e testare sia l'happy path che la disconnessione. (15/15 test in `tests/test_docker_probe.py`: CPU calc, RAM calc, happy path, mixed containers, socket failure, retry, stats failure, no containers, event listener, serializzazione, roundtrip)
   
 - [ ] **Task 2.2** `[SKILL: database_engineer]`: Sviluppo `storage_engine.py` (scrittura asincrona/bufferizzata per non bloccare i thread in caso di I/O lento).
   - [ ] Setup schema DB e connessione SQLite con parametro WAL.
