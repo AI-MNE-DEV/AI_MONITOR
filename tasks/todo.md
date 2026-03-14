@@ -29,11 +29,12 @@
   - [x] Loop di validazione metriche in ingresso per generare `AlertEvent`. (classe `AlertManager` con `evaluate_host_metrics` e `evaluate_docker_metrics`, deduplicazione cooldown, fallback CRITICAL_ALERTS.txt)
   - [x] Unit Test: Passare metriche mock al di sopra e al di sotto delle soglie e contare gli alert innescati. (21/21 test: soglie CPU/RAM warning/critical, cooldown, degraded, Docker, container CPU, active_alerts, CRITICAL_ALERTS.txt, contract)
   
-- [ ] **Task 3.2** `[SKILL: api_developer]`: Sviluppo `ws_streamer.py` e rotte REST per interrogare lo storico e lo stato alert.
-  - [ ] Connessione ed enumerazione dei client WS attivi.
-  - [ ] Broadcast in real-time di `HostMetrics`, `DockerMetrics` e `AlertEvent`.
-  - [ ] Rotte REST GET `/api/history` e status allarmi.
-  - [ ] Integration Test: Fake client WebSocket che ascolta lo streaming per verifiche serializzazione.
+- [x] **Task 3.2** `[SKILL: api_developer]`: Sviluppo `ws_streamer.py` e rotte REST per interrogare lo storico e lo stato alert.
+  - [x] Connessione ed enumerazione dei client WS attivi. (`ConnectionManager` con `active_count`, `connect()`, `disconnect()`, rimozione automatica client stale)
+  - [x] Broadcast in real-time di `HostMetrics`, `DockerMetrics` e `AlertEvent`. (`broadcast_system_status()`, `broadcast_alert()`, timeout 5s per client lenti)
+  - [x] Rotte REST GET `/api/history` e status allarmi. (`/api/v1/history/host`, `/api/v1/history/docker`, `/api/v1/alerts`, `/api/v1/alerts/active` con paginazione limit/offset)
+  - [x] Integration Test: Fake client WebSocket che ascolta lo streaming per verifiche serializzazione. (15/15 test: ConnectionManager, broadcast, stale removal, REST endpoints, WS ping/pong)
+  - [x] Refactoring `main.py`: rimosso `@app.on_event("startup")` deprecato, adottato `lifespan` context manager, integrati tutti i moduli (probe, storage, alert, WS), telemetry loop asincrono
 
 ## Sprint 4: La "War Room" Dashboard
 - [ ] **Task 4.1** `[SKILL: premium_ui_ux_designer, noc_dashboard_specialist]`: Sviluppo Frontend SPA (Single Page Application).
