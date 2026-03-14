@@ -47,8 +47,19 @@
 
 ---
 
+## Sprint 5: Produzione
+- [x] **Task 5.1**: Deploy Docker per produzione.
+  - [x] Dockerfile con healthcheck, dipendenze runtime, immagine slim.
+  - [x] docker-compose.yml con mount Docker socket (ro), volume dati persistente, log rotation.
+  - [x] .dockerignore per build leggera.
+  - [x] SYSTEM_ADMIN_GUIDE.md con istruzioni deploy, configurazione e troubleshooting.
+  - [x] Deploy verificato su srv-aiservices: health check OK (`curl http://localhost:8000/health`).
+
+---
+
 ## Stato Sessione (2026-03-14)
-**Tutti i 7 task completati.** 88/88 test passati. Progetto funzionante end-to-end.
-- Avvio: `uvicorn main:app --host 0.0.0.0 --port 8000`
-- Dashboard: `http://localhost:8000/`
-- Il Docker probe mostra status "degraded" su WSL2 senza Docker Desktop attivo (comportamento corretto, fallback funziona)
+**Tutti i 7+1 task completati.** 88/88 test passati. Servizio deployato in produzione.
+- Produzione: `srv-aiservices` - container `ai-monitor` running
+- Dashboard: `http://<ip-server>:8000/`
+- Health check confermato OK da server remoto
+- Nessun lavoro in sospeso. Workspace pulito.
