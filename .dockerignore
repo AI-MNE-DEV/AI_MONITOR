@@ -1,0 +1,15 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.git/
+.claude/
+tests/
+tasks/
+skills/
+data/
+*.egg-info/
+.env
+CRITICAL_ALERTS.txt
+architettura.md

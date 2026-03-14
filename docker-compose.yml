@@ -1,0 +1,24 @@
+services:
+  ai-monitor:
+    build: .
+    container_name: ai-monitor
+    restart: unless-stopped
+    ports:
+      - "${AI_MONITOR_PORT:-8000}:8000"
+    volumes:
+      # Docker socket per monitorare i container host
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Persistenza DB SQLite
+      - ai_monitor_data:/app/data
+    env_file:
+      - .env
+    environment:
+      - AI_MONITOR_DB_PATH=/app/data/ai_monitor.db
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ai_monitor_data:
