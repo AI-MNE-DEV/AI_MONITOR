@@ -57,9 +57,18 @@
 
 ---
 
-## Stato Sessione (2026-03-14)
-**Tutti i 7+1 task completati.** 88/88 test passati. Servizio deployato in produzione.
+### Sprint 6: Integrazioni Architetturali Avanzate (Nuovi Task)
+- [x] **Task 6.1 `[SKILL: devops_notifier]`:** Notifiche Esterne (Telegram + Webhook). Nuovo modulo `notifier.py`: dispatcher asincrono non-bloccante (`httpx.AsyncClient`), supporto Telegram Bot API e Webhook generico POST JSON, configurazione 100% via env, validazione config al boot, graceful degradation. Integrato in `main.py` lifespan + telemetry loop. Aggiornati `.env.example` e `SYSTEM_ADMIN_GUIDE.md`. 23/23 test in `tests/test_notifier.py`.
+- [ ] **Task 6.2 `[SKILL: system_engineer]`:** Estensione Sonde e Contratti. Aggiornare `contracts.py`, `host_probe.py` e `docker_probe.py` per estrarre e validare Network I/O (RX/TX), Disk I/O (Lettura/Scrittura) e Spazio Disco (Totale/Usato/Libero/% sia per host che per container).
+- [ ] **Task 6.3 `[SKILL: database_engineer]`:** Data Retention. Implementare in `storage_engine.py` un job asincrono schedulato che elimini fisicamente dal DB le metriche più vecchie di 7 giorni per prevenire la saturazione del disco.
+- [ ] **Task 6.4 `[SKILL: frontend_developer]`:** UI Dinamica e Live Logs. Aggiungere il sorting dinamico (ordinamento per colonne su CPU/RAM/Disco) nella griglia frontend e implementare una modale "Live Log Viewer" (un terminale read-only che mostri in realtime le ultime righe di log al click sul container).
+- [ ] **Task 6.5 `[SKILL: data_viz_engineer]`:** Implementazione Grafici Storici. Integrare micro-grafici (Sparklines) per i trend rapidi degli ultimi 60 minuti direttamente nella vista a griglia dei container. Aggiungere grafici a linee interattivi e dettagliati (CPU, RAM, Network I/O, Disk I/O) all'interno della modale di dettaglio di ogni container, utilizzando una libreria frontend ottimizzata per non bloccare il rendering.
+
+---
+
+## Stato Sessione (2026-03-15)
+**Task completati fino a 6.1.** 111/111 test passati.
 - Produzione: `srv-aiservices` - container `ai-monitor` running
 - Dashboard: `http://<ip-server>:8000/`
-- Health check confermato OK da server remoto
-- Nessun lavoro in sospeso. Workspace pulito.
+- Notifiche esterne: pronte, da attivare via `.env` con token Telegram o URL webhook.
+- Prossimo task: 6.2 (Estensione Sonde e Contratti).

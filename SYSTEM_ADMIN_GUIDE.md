@@ -35,6 +35,13 @@ curl http://localhost:8000/health
 | `ALERT_RAM_WARNING` | `85.0` | Soglia RAM warning (%) |
 | `ALERT_RAM_CRITICAL` | `90.0` | Soglia RAM critical (%) |
 | `ALERT_COOLDOWN_SECONDS` | `60` | Cooldown tra alert ripetuti |
+| `NOTIFY_TELEGRAM_ENABLED` | `false` | Abilita notifiche Telegram |
+| `NOTIFY_TELEGRAM_BOT_TOKEN` | *(vuoto)* | Token bot da @BotFather |
+| `NOTIFY_TELEGRAM_CHAT_ID` | *(vuoto)* | Chat ID destinazione |
+| `NOTIFY_WEBHOOK_ENABLED` | `false` | Abilita webhook generico |
+| `NOTIFY_WEBHOOK_URL` | *(vuoto)* | URL endpoint POST JSON |
+| `NOTIFY_MIN_LEVEL` | `CRITICAL` | Livello minimo: CRITICAL o WARNING |
+| `NOTIFY_HTTP_TIMEOUT` | `10.0` | Timeout HTTP notifiche (secondi) |
 
 ## Comandi Operativi
 

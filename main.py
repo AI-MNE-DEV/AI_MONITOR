@@ -24,6 +24,7 @@ from alert_manager import AlertManager
 from contracts import DockerMetrics, HostMetrics, SystemStatus
 from docker_probe import collect_docker_metrics, listen_docker_events
 from host_probe import collect_host_metrics
+from notifier import Notifier
 from storage_engine import StorageEngine
 from ws_streamer import manager
 
@@ -39,6 +40,7 @@ _latest_docker: DockerMetrics | None = None
 # Componenti core
 _storage: StorageEngine | None = None
 _alert_mgr: AlertManager | None = None
+_notifier: Notifier | None = None
 
 
 async def _telemetry_loop() -> None:
@@ -73,6 +75,11 @@ async def _telemetry_loop() -> None:
                 for alert in alerts:
                     _storage.store(alert)
 
+            # Notifiche esterne
+            if _notifier:
+                for alert in alerts:
+                    await _notifier.notify(alert)
+
             # WebSocket broadcast
             status = SystemStatus(
                 host=host_metrics,
@@ -93,7 +100,7 @@ async def _telemetry_loop() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifecycle manager: avvia e ferma i componenti core."""
-    global _storage, _alert_mgr
+    global _storage, _alert_mgr, _notifier
 
     logger.info("AI MONITOR Avviato. Inizializzazione moduli Core...")
 
@@ -103,6 +110,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Alert Manager
     _alert_mgr = AlertManager()
+
+    # Notifier (notifiche esterne)
+    _notifier = Notifier()
+    await _notifier.start()
 
     # Telemetry loop
     telemetry_task = asyncio.create_task(_telemetry_loop())
@@ -124,6 +135,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await telemetry_task
     except asyncio.CancelledError:
         pass
+
+    if _notifier:
+        await _notifier.stop()
 
     if _storage:
         _storage.stop()
