@@ -260,6 +260,22 @@
         }
         .modal-body.loading { text-align: center; color: var(--text-muted); padding: 3rem; }
 
+        /* === SPARKLINE === */
+        .sparkline-row { display: flex; gap: 1.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .sparkline-box { flex: 1; }
+        .sparkline-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+        .sparkline-svg { width: 100%; height: 40px; }
+
+        /* === MODAL TABS === */
+        .modal-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+        .modal-tab {
+            padding: 0.6rem 1.2rem; font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 600; color: var(--text-muted); background: none; border: none;
+            cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase;
+        }
+        .modal-tab:hover { color: var(--text-secondary); }
+        .modal-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
         /* === RESPONSIVE === */
         @media (max-width: 900px) {
             .dashboard { grid-template-columns: 1fr; }
@@ -322,6 +338,16 @@
                 <div class="metric-label">NET RX</div>
             </div>
         </div>
+        <div class="sparkline-row">
+            <div class="sparkline-box">
+                <div class="sparkline-label">CPU TREND (60m)</div>
+                <svg id="cpuSparkline" class="sparkline-svg" viewBox="0 0 200 40" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="sparkline-box">
+                <div class="sparkline-label">RAM TREND (60m)</div>
+                <svg id="ramSparkline" class="sparkline-svg" viewBox="0 0 200 40" preserveAspectRatio="none"></svg>
+            </div>
+        </div>
         <div class="disk-bar-container">
             <div class="disk-bar-label">DISK USAGE</div>
             <div class="disk-bar-track"><div id="diskBarFill" class="disk-bar-fill" style="width:0%;background:var(--green);"></div></div>
@@ -377,14 +403,26 @@
 
 </main>
 
-<!-- LOG MODAL -->
+<!-- CONTAINER MODAL -->
 <div id="logModal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <span id="logModalTitle" class="modal-title">Container Logs</span>
+            <span id="logModalTitle" class="modal-title">Container</span>
             <button id="logModalClose" class="modal-close">&times;</button>
         </div>
+        <div class="modal-tabs">
+            <button class="modal-tab active" data-tab="logs">LOGS</button>
+            <button class="modal-tab" data-tab="charts">CHARTS</button>
+        </div>
         <div id="logModalBody" class="modal-body loading">Loading logs...</div>
+        <div id="chartModalBody" class="modal-body" style="display:none;">
+            <div class="sparkline-label">CPU % (Session History)</div>
+            <svg id="modalCpuChart" class="sparkline-svg" style="height:80px;" viewBox="0 0 400 80" preserveAspectRatio="none"></svg>
+            <div class="sparkline-label" style="margin-top:1rem;">RAM MB (Session History)</div>
+            <svg id="modalRamChart" class="sparkline-svg" style="height:80px;" viewBox="0 0 400 80" preserveAspectRatio="none"></svg>
+            <div class="sparkline-label" style="margin-top:1rem;">NET TX/RX (Session History)</div>
+            <svg id="modalNetChart" class="sparkline-svg" style="height:80px;" viewBox="0 0 400 80" preserveAspectRatio="none"></svg>
+        </div>
     </div>
 </div>
 
@@ -417,12 +455,26 @@
     const logModal = $('logModal');
     const logModalTitle = $('logModalTitle');
     const logModalBody = $('logModalBody');
+    const chartModalBody = $('chartModalBody');
     const logModalClose = $('logModalClose');
+    const cpuSparkSvg = $('cpuSparkline');
+    const ramSparkSvg = $('ramSparkline');
+    const modalCpuChart = $('modalCpuChart');
+    const modalRamChart = $('modalRamChart');
+    const modalNetChart = $('modalNetChart');
 
     // === STATE ===
     let currentContainers = [];
     let sortColumn = 'name';
     let sortAsc = true;
+
+    // Circular buffer for host sparklines (last 720 samples ~ 60min at 5s interval)
+    const MAX_HISTORY = 720;
+    const hostCpuHistory = [];
+    const hostRamHistory = [];
+
+    // Per-container history keyed by container_id
+    const containerHistory = {};
 
     // === HELPERS ===
     function formatBytes(bytes) {
@@ -454,6 +506,41 @@
         return d.innerHTML;
     }
 
+    // === SVG SPARKLINE RENDERER ===
+    function renderSparkline(svgEl, data, color, maxVal) {
+        if (!data || data.length < 2) { svgEl.innerHTML = ''; return; }
+        const vw = parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
+        const vh = parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
+        const max = maxVal || Math.max(...data, 1);
+        const step = vw / (data.length - 1);
+        let points = '';
+        for (let i = 0; i < data.length; i++) {
+            const x = (i * step).toFixed(1);
+            const y = (vh - (data[i] / max) * (vh - 2) - 1).toFixed(1);
+            points += x + ',' + y + ' ';
+        }
+        const lastY = (vh - (data[data.length - 1] / max) * (vh - 2) - 1).toFixed(1);
+        svgEl.innerHTML =
+            '<polyline points="' + points.trim() + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round"/>' +
+            '<circle cx="' + (vw).toFixed(1) + '" cy="' + lastY + '" r="2" fill="' + color + '"/>';
+    }
+
+    function renderDualSparkline(svgEl, data1, color1, data2, color2) {
+        if (!data1 || data1.length < 2) { svgEl.innerHTML = ''; return; }
+        const vw = parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
+        const vh = parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
+        const max = Math.max(...data1, ...data2, 1);
+        function makeLine(data, color) {
+            const step = vw / (data.length - 1);
+            let pts = '';
+            for (let i = 0; i < data.length; i++) {
+                pts += (i * step).toFixed(1) + ',' + (vh - (data[i] / max) * (vh - 2) - 1).toFixed(1) + ' ';
+            }
+            return '<polyline points="' + pts.trim() + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round"/>';
+        }
+        svgEl.innerHTML = makeLine(data1, color1) + makeLine(data2, color2);
+    }
+
     // === CLOCK ===
     setInterval(() => {
         clock.textContent = new Date().toLocaleTimeString('it-IT', { hour12: false });
@@ -480,12 +567,49 @@
         });
     });
 
+    // === MODAL TABS ===
+    let activeModalTab = 'logs';
+    let activeContainerId = null;
+
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            activeModalTab = tab.dataset.tab;
+            logModalBody.style.display = activeModalTab === 'logs' ? '' : 'none';
+            chartModalBody.style.display = activeModalTab === 'charts' ? '' : 'none';
+            if (activeModalTab === 'charts' && activeContainerId) renderContainerCharts(activeContainerId);
+        });
+    });
+
     // === LOG MODAL ===
     logModalClose.addEventListener('click', () => { logModal.classList.remove('active'); });
     logModal.addEventListener('click', (e) => { if (e.target === logModal) logModal.classList.remove('active'); });
 
+    function renderContainerCharts(cid) {
+        const h = containerHistory[cid];
+        if (!h) {
+            modalCpuChart.innerHTML = '';
+            modalRamChart.innerHTML = '';
+            modalNetChart.innerHTML = '';
+            return;
+        }
+        renderSparkline(modalCpuChart, h.cpu, '#00ff88', 100);
+        renderSparkline(modalRamChart, h.ram, '#3b82f6', null);
+        renderDualSparkline(modalNetChart, h.netTx, '#00ff88', h.netRx, '#3b82f6');
+    }
+
     function openLogModal(containerId, containerName) {
-        logModalTitle.textContent = 'Logs: ' + containerName;
+        activeContainerId = containerId;
+        logModalTitle.textContent = containerName;
+
+        // Reset to logs tab
+        activeModalTab = 'logs';
+        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.modal-tab[data-tab="logs"]').classList.add('active');
+        logModalBody.style.display = '';
+        chartModalBody.style.display = 'none';
+
         logModalBody.textContent = 'Loading logs...';
         logModalBody.className = 'modal-body loading';
         logModal.classList.add('active');
@@ -527,6 +651,14 @@
         diskBarText.textContent = diskUsed.toFixed(1) + ' / ' + diskTotal.toFixed(1) + ' GB (' + diskPct.toFixed(0) + '%)';
 
         hostStatusDot.className = 'status-dot ' + (host.status || 'ok');
+
+        // Update sparkline buffers
+        hostCpuHistory.push(cpu);
+        hostRamHistory.push(ram);
+        if (hostCpuHistory.length > MAX_HISTORY) hostCpuHistory.shift();
+        if (hostRamHistory.length > MAX_HISTORY) hostRamHistory.shift();
+        renderSparkline(cpuSparkSvg, hostCpuHistory, '#00ff88', 100);
+        renderSparkline(ramSparkSvg, hostRamHistory, '#3b82f6', 100);
     }
 
     function renderContainers() {
@@ -564,6 +696,20 @@
         runningContainers.textContent = docker.running_containers;
         dockerStatusDot.className = 'status-dot ' + (docker.status || 'ok');
         currentContainers = docker.containers || [];
+
+        // Track per-container history
+        for (const c of currentContainers) {
+            if (!containerHistory[c.container_id]) {
+                containerHistory[c.container_id] = { cpu: [], ram: [], netTx: [], netRx: [] };
+            }
+            const h = containerHistory[c.container_id];
+            h.cpu.push(c.cpu_percent || 0);
+            h.ram.push(c.ram_usage_mb || 0);
+            h.netTx.push(c.net_io_sent_bytes || 0);
+            h.netRx.push(c.net_io_recv_bytes || 0);
+            if (h.cpu.length > MAX_HISTORY) { h.cpu.shift(); h.ram.shift(); h.netTx.shift(); h.netRx.shift(); }
+        }
+
         renderContainers();
     }
 
