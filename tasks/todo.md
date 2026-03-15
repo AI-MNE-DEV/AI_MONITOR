@@ -67,12 +67,12 @@
 ---
 
 ## Stato Sessione (2026-03-15)
-**Sprint 6 completato (5/5 task).** 125/125 test passati.
+**Sprint 6 completato (5/5 task) + Task 6.7 completato.** 130/130 test passati.
 - Produzione: `srv-aiservices` - container `ai-monitor` running
 - Dashboard: `http://<ip-server>:8000/`
-- Notifiche: 3 canali (Telegram, Webhook, Email) - da attivare via `.env`
+- Notifiche: 3 canali (Telegram multi-destinatario, Webhook, Email) - da attivare via `.env`
 - Data Retention: attiva automaticamente (7 giorni default)
-- Nessun lavoro in sospeso. Workspace pulito.
+- Task 6.7 (multi-destinatario Telegram) completato e pushato. Nessun lavoro in sospeso.
 
 ### Sprint 6: Integrazione Multi-Destinatario
 - [x] **Task 6.7 `[SKILL: backend_logic_expert]`:** Supporto Multi-Destinatario Telegram. `NOTIFY_TELEGRAM_CHAT_ID` accetta stringhe multiple separate da virgola (es. `12345,67890,-100123456`). `notifier.py` itera su tutti i chat_id con gestione errori indipendente per destinatario. 35/35 test notifier (4 nuovi: all_success, partial_failure, network_error_isolated, multi+webhook+email). 130/130 test totali.
