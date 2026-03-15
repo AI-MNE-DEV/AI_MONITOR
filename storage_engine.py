@@ -86,7 +86,30 @@ def _init_db(conn: sqlite3.Connection) -> None:
     )
 
     conn.commit()
+
+    # Migrazioni: aggiunge colonne mancanti a tabelle pre-esistenti
+    _migrate_add_columns(conn)
+
     logger.info("storage_engine: schema DB inizializzato (WAL mode)")
+
+
+def _migrate_add_columns(conn: sqlite3.Connection) -> None:
+    """Aggiunge colonne introdotte nello Sprint 6 a tabelle pre-esistenti."""
+    migrations = [
+        ("host_metrics", "net_io_sent_bytes", "INTEGER NOT NULL DEFAULT 0"),
+        ("host_metrics", "net_io_recv_bytes", "INTEGER NOT NULL DEFAULT 0"),
+        ("host_metrics", "disk_total_gb", "REAL NOT NULL DEFAULT 0"),
+        ("host_metrics", "disk_used_gb", "REAL NOT NULL DEFAULT 0"),
+        ("host_metrics", "disk_free_gb", "REAL NOT NULL DEFAULT 0"),
+        ("host_metrics", "disk_percent", "REAL NOT NULL DEFAULT 0"),
+    ]
+    for table, column, col_type in migrations:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+            logger.info("storage_engine: migrazione - aggiunta %s.%s", table, column)
+        except sqlite3.OperationalError:
+            pass  # colonna già presente
+    conn.commit()
 
 
 def _insert_host_metrics(conn: sqlite3.Connection, metrics: HostMetrics) -> None:
