@@ -94,13 +94,13 @@ class TestNotifierInit:
 
     def test_telegram_enabled_without_token_disables(self):
         n = Notifier(
-            telegram_enabled=True, telegram_bot_token="", telegram_chat_id="123"
+            telegram_enabled=True, telegram_bot_token="", telegram_chat_ids=["123"]
         )
         assert n._telegram_enabled is False
 
-    def test_telegram_enabled_without_chat_id_disables(self):
+    def test_telegram_enabled_without_chat_ids_disables(self):
         n = Notifier(
-            telegram_enabled=True, telegram_bot_token="tok", telegram_chat_id=""
+            telegram_enabled=True, telegram_bot_token="tok", telegram_chat_ids=[]
         )
         assert n._telegram_enabled is False
 
@@ -112,10 +112,19 @@ class TestNotifierInit:
         n = Notifier(
             telegram_enabled=True,
             telegram_bot_token="123:ABC",
-            telegram_chat_id="-100123",
+            telegram_chat_ids=["-100123"],
         )
         assert n._telegram_enabled is True
         assert n.is_active is True
+
+    def test_valid_telegram_multi_chat_ids(self):
+        n = Notifier(
+            telegram_enabled=True,
+            telegram_bot_token="123:ABC",
+            telegram_chat_ids=["-100123", "456789", "-100999"],
+        )
+        assert n._telegram_enabled is True
+        assert len(n._telegram_chat_ids) == 3
 
     def test_valid_webhook_config(self):
         n = Notifier(webhook_enabled=True, webhook_url="https://hooks.example.com/x")
@@ -172,7 +181,7 @@ async def test_notify_telegram_success():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
     )
     await n.start()
 
@@ -213,7 +222,7 @@ async def test_notify_both_channels():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
         webhook_enabled=True,
         webhook_url="https://hooks.example.com/alert",
     )
@@ -235,7 +244,7 @@ async def test_notify_skips_below_min_level():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
         min_level="CRITICAL",
     )
     await n.start()
@@ -254,7 +263,7 @@ async def test_notify_warning_level_when_min_is_warning():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
         min_level="WARNING",
     )
     await n.start()
@@ -275,7 +284,7 @@ async def test_telegram_http_error_does_not_raise():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
     )
     await n.start()
 
@@ -374,7 +383,7 @@ async def test_notify_all_three_channels():
     n = Notifier(
         telegram_enabled=True,
         telegram_bot_token="123:ABC",
-        telegram_chat_id="-100123",
+        telegram_chat_ids=["-100123"],
         webhook_enabled=True,
         webhook_url="https://hooks.example.com/alert",
         email_enabled=True,
@@ -393,5 +402,117 @@ async def test_notify_all_three_channels():
         await n.notify(_make_alert())
 
     assert n.sent_count == 3  # Telegram + Webhook + Email
+
+    await n.stop()
+
+
+# --- Multi-destinatario Telegram ---
+
+
+@pytest.mark.asyncio
+async def test_telegram_multi_recipient_all_success():
+    """Invio a 3 chat_id: tutti ricevono il messaggio."""
+    n = Notifier(
+        telegram_enabled=True,
+        telegram_bot_token="123:ABC",
+        telegram_chat_ids=["-100111", "222333", "-100444"],
+    )
+    await n.start()
+
+    mock_response = httpx.Response(200, json={"ok": True})
+    n._client.post = AsyncMock(return_value=mock_response)  # type: ignore[union-attr]
+
+    await n.notify(_make_alert())
+
+    assert n._client.post.call_count == 3  # type: ignore[union-attr]
+    assert n.sent_count == 3
+
+    # Verifica che ogni chat_id sia stato usato
+    sent_ids = [
+        call.kwargs["json"]["chat_id"]
+        for call in n._client.post.call_args_list  # type: ignore[union-attr]
+    ]
+    assert sent_ids == ["-100111", "222333", "-100444"]
+
+    await n.stop()
+
+
+@pytest.mark.asyncio
+async def test_telegram_multi_recipient_partial_failure():
+    """Se un chat_id fallisce, gli altri devono comunque ricevere."""
+    n = Notifier(
+        telegram_enabled=True,
+        telegram_bot_token="123:ABC",
+        telegram_chat_ids=["-100111", "BAD_ID", "-100333"],
+    )
+    await n.start()
+
+    ok_resp = httpx.Response(200, json={"ok": True})
+    err_resp = httpx.Response(400, text="Bad Request: chat not found")
+
+    n._client.post = AsyncMock(  # type: ignore[union-attr]
+        side_effect=[ok_resp, err_resp, ok_resp]
+    )
+
+    await n.notify(_make_alert())
+
+    assert n._client.post.call_count == 3  # type: ignore[union-attr]
+    assert n.sent_count == 2  # 2 OK, 1 fallito
+
+    await n.stop()
+
+
+@pytest.mark.asyncio
+async def test_telegram_multi_recipient_network_error_isolated():
+    """Errore di rete su un chat_id non blocca gli altri."""
+    n = Notifier(
+        telegram_enabled=True,
+        telegram_bot_token="123:ABC",
+        telegram_chat_ids=["-100111", "-100222"],
+    )
+    await n.start()
+
+    ok_resp = httpx.Response(200, json={"ok": True})
+
+    n._client.post = AsyncMock(  # type: ignore[union-attr]
+        side_effect=[httpx.ConnectError("timeout"), ok_resp]
+    )
+
+    await n.notify(_make_alert())
+
+    assert n._client.post.call_count == 2  # type: ignore[union-attr]
+    assert n.sent_count == 1  # Solo il secondo ha successo
+
+    await n.stop()
+
+
+@pytest.mark.asyncio
+async def test_telegram_multi_recipient_with_webhook_and_email():
+    """Multi-destinatario Telegram + Webhook + Email: conteggio corretto."""
+    n = Notifier(
+        telegram_enabled=True,
+        telegram_bot_token="123:ABC",
+        telegram_chat_ids=["-100111", "-100222"],
+        webhook_enabled=True,
+        webhook_url="https://hooks.example.com/alert",
+        email_enabled=True,
+        email_smtp_host="smtp.example.com",
+        email_from="m@x.com",
+        email_to="a@x.com",
+        email_use_tls=False,
+    )
+    await n.start()
+
+    mock_response = httpx.Response(200, json={"ok": True})
+    n._client.post = AsyncMock(return_value=mock_response)  # type: ignore[union-attr]
+
+    with patch("notifier.smtplib.SMTP") as mock_smtp:
+        mock_smtp.return_value.__enter__.return_value
+        await n.notify(_make_alert())
+
+    # 2 Telegram + 1 Webhook + 1 Email = 4
+    assert n.sent_count == 4
+    # HTTP calls: 2 Telegram + 1 Webhook = 3
+    assert n._client.post.call_count == 3  # type: ignore[union-attr]
 
     await n.stop()

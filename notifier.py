@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 # --- Configurazione via env ---
 TELEGRAM_ENABLED: bool = os.getenv("NOTIFY_TELEGRAM_ENABLED", "false").lower() == "true"
 TELEGRAM_BOT_TOKEN: str = os.getenv("NOTIFY_TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID: str = os.getenv("NOTIFY_TELEGRAM_CHAT_ID", "")
+TELEGRAM_CHAT_IDS: list[str] = [
+    cid.strip()
+    for cid in os.getenv("NOTIFY_TELEGRAM_CHAT_ID", "").split(",")
+    if cid.strip()
+]
 
 WEBHOOK_ENABLED: bool = os.getenv("NOTIFY_WEBHOOK_ENABLED", "false").lower() == "true"
 WEBHOOK_URL: str = os.getenv("NOTIFY_WEBHOOK_URL", "")
@@ -116,7 +120,7 @@ class Notifier:
         self,
         telegram_enabled: bool = TELEGRAM_ENABLED,
         telegram_bot_token: str = TELEGRAM_BOT_TOKEN,
-        telegram_chat_id: str = TELEGRAM_CHAT_ID,
+        telegram_chat_ids: list[str] | None = None,
         webhook_enabled: bool = WEBHOOK_ENABLED,
         webhook_url: str = WEBHOOK_URL,
         email_enabled: bool = EMAIL_ENABLED,
@@ -132,7 +136,11 @@ class Notifier:
     ) -> None:
         self._telegram_enabled = telegram_enabled
         self._telegram_bot_token = telegram_bot_token
-        self._telegram_chat_id = telegram_chat_id
+        self._telegram_chat_ids: list[str] = (
+            telegram_chat_ids
+            if telegram_chat_ids is not None
+            else list(TELEGRAM_CHAT_IDS)
+        )
         self._webhook_enabled = webhook_enabled
         self._webhook_url = webhook_url
         self._email_enabled = email_enabled
@@ -150,7 +158,7 @@ class Notifier:
 
         # Validazione configurazione al boot
         if self._telegram_enabled and (
-            not self._telegram_bot_token or not self._telegram_chat_id
+            not self._telegram_bot_token or not self._telegram_chat_ids
         ):
             logger.error(
                 "notifier: Telegram abilitato ma NOTIFY_TELEGRAM_BOT_TOKEN "
@@ -230,29 +238,40 @@ class Notifier:
             await self._send_email(alert)
 
     async def _send_telegram(self, alert: AlertEvent) -> None:
-        """Invia un messaggio via Telegram Bot API."""
+        """Invia un messaggio via Telegram Bot API a tutti i chat_id configurati.
+
+        Ogni destinatario viene gestito in modo indipendente: un errore su un
+        singolo chat_id non blocca l'invio agli altri.
+        """
         if not self._client:
             return
 
         url = f"https://api.telegram.org/bot{self._telegram_bot_token}/sendMessage"
-        payload = {
-            "chat_id": self._telegram_chat_id,
-            "text": _format_telegram_message(alert),
-        }
+        text = _format_telegram_message(alert)
 
-        try:
-            resp = await self._client.post(url, json=payload)
-            if resp.status_code == 200:
-                self._sent_count += 1
-                logger.info(
-                    "notifier: Telegram inviato [%s] %s", alert.level, alert.source
-                )
-            else:
+        for chat_id in self._telegram_chat_ids:
+            payload = {"chat_id": chat_id, "text": text}
+            try:
+                resp = await self._client.post(url, json=payload)
+                if resp.status_code == 200:
+                    self._sent_count += 1
+                    logger.info(
+                        "notifier: Telegram inviato [%s] %s -> chat_id=%s",
+                        alert.level,
+                        alert.source,
+                        chat_id,
+                    )
+                else:
+                    logger.warning(
+                        "notifier: Telegram HTTP %d per chat_id=%s - %s",
+                        resp.status_code,
+                        chat_id,
+                        resp.text[:200],
+                    )
+            except httpx.HTTPError as exc:
                 logger.warning(
-                    "notifier: Telegram HTTP %d - %s", resp.status_code, resp.text[:200]
+                    "notifier: Telegram errore rete per chat_id=%s: %s", chat_id, exc
                 )
-        except httpx.HTTPError as exc:
-            logger.warning("notifier: Telegram errore rete: %s", exc)
 
     async def _send_webhook(self, alert: AlertEvent) -> None:
         """Invia un POST JSON al webhook generico."""

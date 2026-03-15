@@ -39,7 +39,7 @@ curl http://localhost:8000/health
 | `AI_MONITOR_RETENTION_INTERVAL_HOURS` | `6` | Ore tra cicli di pulizia |
 | `NOTIFY_TELEGRAM_ENABLED` | `false` | Abilita notifiche Telegram |
 | `NOTIFY_TELEGRAM_BOT_TOKEN` | *(vuoto)* | Token bot da @BotFather |
-| `NOTIFY_TELEGRAM_CHAT_ID` | *(vuoto)* | Chat ID destinazione |
+| `NOTIFY_TELEGRAM_CHAT_ID` | *(vuoto)* | Chat ID destinazione (multipli separati da virgola, es. `123456,-100789012`) |
 | `NOTIFY_WEBHOOK_ENABLED` | `false` | Abilita webhook generico |
 | `NOTIFY_WEBHOOK_URL` | *(vuoto)* | URL endpoint POST JSON |
 | `NOTIFY_EMAIL_ENABLED` | `false` | Abilita notifiche email SMTP |
