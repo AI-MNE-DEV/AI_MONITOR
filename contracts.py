@@ -11,6 +11,12 @@ class HostMetrics(BaseModel):
     ram_percent: float = Field(..., description="Utilizzo RAM globale (0-100%)")
     disk_io_read_bytes: int = Field(default=0, description="I/O in lettura globale")
     disk_io_write_bytes: int = Field(default=0, description="I/O in scrittura globale")
+    net_io_sent_bytes: int = Field(default=0, description="Network TX cumulativo")
+    net_io_recv_bytes: int = Field(default=0, description="Network RX cumulativo")
+    disk_total_gb: float = Field(default=0.0, description="Spazio disco totale (GB)")
+    disk_used_gb: float = Field(default=0.0, description="Spazio disco usato (GB)")
+    disk_free_gb: float = Field(default=0.0, description="Spazio disco libero (GB)")
+    disk_percent: float = Field(default=0.0, description="Spazio disco usato (%)")
     status: str = Field(
         default="ok", description="Rappresenta lo stato: ok, degraded, failed"
     )
@@ -24,6 +30,10 @@ class ContainerMetrics(BaseModel):
     status: str = Field(..., description="Stato del container: running, exited, ghost")
     cpu_percent: float = Field(default=0.0)
     ram_usage_mb: float = Field(default=0.0)
+    net_io_sent_bytes: int = Field(default=0, description="Network TX container")
+    net_io_recv_bytes: int = Field(default=0, description="Network RX container")
+    disk_read_bytes: int = Field(default=0, description="Block I/O read")
+    disk_write_bytes: int = Field(default=0, description="Block I/O write")
     uptime_seconds: Optional[int] = Field(default=None)
 
 

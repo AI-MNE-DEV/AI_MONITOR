@@ -63,6 +63,34 @@ def _collect_disk_io() -> tuple[int, int]:
     return (counters.read_bytes, counters.write_bytes)
 
 
+def _collect_net_io() -> tuple[int, int]:
+    """Legge i contatori cumulativi di Network I/O globale.
+
+    Returns:
+        Tupla (sent_bytes, recv_bytes) cumulativi.
+    """
+    counters = psutil.net_io_counters()
+    if counters is None:
+        return (0, 0)
+    return (counters.bytes_sent, counters.bytes_recv)
+
+
+def _collect_disk_usage(path: str = "/") -> tuple[float, float, float, float]:
+    """Legge lo spazio disco per il path specificato.
+
+    Returns:
+        Tupla (total_gb, used_gb, free_gb, percent).
+    """
+    usage = psutil.disk_usage(path)
+    gb = 1024**3
+    return (
+        round(usage.total / gb, 2),
+        round(usage.used / gb, 2),
+        round(usage.free / gb, 2),
+        usage.percent,
+    )
+
+
 def collect_host_metrics_sync() -> HostMetrics:
     """Raccoglie tutte le metriche host in modo sincrono con retry e fallback.
 
@@ -79,6 +107,8 @@ def collect_host_metrics_sync() -> HostMetrics:
             cpu: float = _collect_cpu_percent()
             ram: float = _collect_ram_percent()
             read_bytes, write_bytes = _collect_disk_io()
+            net_sent, net_recv = _collect_net_io()
+            d_total, d_used, d_free, d_pct = _collect_disk_usage()
 
             return HostMetrics(
                 timestamp=datetime.now(timezone.utc),
@@ -86,6 +116,12 @@ def collect_host_metrics_sync() -> HostMetrics:
                 ram_percent=ram,
                 disk_io_read_bytes=read_bytes,
                 disk_io_write_bytes=write_bytes,
+                net_io_sent_bytes=net_sent,
+                net_io_recv_bytes=net_recv,
+                disk_total_gb=d_total,
+                disk_used_gb=d_used,
+                disk_free_gb=d_free,
+                disk_percent=d_pct,
                 status="ok",
             )
         except Exception as exc:

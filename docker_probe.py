@@ -84,6 +84,31 @@ def _parse_ram_usage_mb(stats: dict[str, Any]) -> float:
     return round((usage_bytes - cache_bytes) / (1024 * 1024), 2)
 
 
+def _parse_net_io(stats: dict[str, Any]) -> tuple[int, int]:
+    """Estrae Network I/O (TX, RX) dai container stats.
+
+    Returns:
+        Tupla (sent_bytes, recv_bytes).
+    """
+    networks = stats.get("networks", {})
+    tx_bytes = sum(n.get("tx_bytes", 0) for n in networks.values())
+    rx_bytes = sum(n.get("rx_bytes", 0) for n in networks.values())
+    return (tx_bytes, rx_bytes)
+
+
+def _parse_block_io(stats: dict[str, Any]) -> tuple[int, int]:
+    """Estrae Block I/O (read, write) dai container stats.
+
+    Returns:
+        Tupla (read_bytes, write_bytes).
+    """
+    blkio = stats.get("blkio_stats", {})
+    entries = blkio.get("io_service_bytes_recursive") or []
+    read_bytes = sum(e.get("value", 0) for e in entries if e.get("op") == "read")
+    write_bytes = sum(e.get("value", 0) for e in entries if e.get("op") == "write")
+    return (read_bytes, write_bytes)
+
+
 def _get_uptime_seconds(container: Any) -> Optional[int]:
     """Calcola i secondi di uptime di un container dal suo started_at.
 
@@ -134,11 +159,18 @@ def collect_docker_metrics_sync() -> DockerMetrics:
                 cpu_pct = 0.0
                 ram_mb = 0.0
 
+                net_tx = 0
+                net_rx = 0
+                blk_read = 0
+                blk_write = 0
+
                 if c_status == "running":
                     try:
                         stats = container.stats(stream=False)
                         cpu_pct = _parse_cpu_percent(stats)
                         ram_mb = _parse_ram_usage_mb(stats)
+                        net_tx, net_rx = _parse_net_io(stats)
+                        blk_read, blk_write = _parse_block_io(stats)
                     except Exception as stats_exc:
                         logger.warning(
                             "docker_probe: stats falliti per %s: %s",
@@ -153,6 +185,10 @@ def collect_docker_metrics_sync() -> DockerMetrics:
                         status=c_status,
                         cpu_percent=cpu_pct,
                         ram_usage_mb=ram_mb,
+                        net_io_sent_bytes=net_tx,
+                        net_io_recv_bytes=net_rx,
+                        disk_read_bytes=blk_read,
+                        disk_write_bytes=blk_write,
                         uptime_seconds=_get_uptime_seconds(container),
                     )
                 )

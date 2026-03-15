@@ -47,6 +47,12 @@ def _init_db(conn: sqlite3.Connection) -> None:
             ram_percent REAL NOT NULL,
             disk_io_read_bytes INTEGER NOT NULL DEFAULT 0,
             disk_io_write_bytes INTEGER NOT NULL DEFAULT 0,
+            net_io_sent_bytes INTEGER NOT NULL DEFAULT 0,
+            net_io_recv_bytes INTEGER NOT NULL DEFAULT 0,
+            disk_total_gb REAL NOT NULL DEFAULT 0,
+            disk_used_gb REAL NOT NULL DEFAULT 0,
+            disk_free_gb REAL NOT NULL DEFAULT 0,
+            disk_percent REAL NOT NULL DEFAULT 0,
             status TEXT NOT NULL DEFAULT 'ok'
         )
         """
@@ -94,8 +100,9 @@ def _insert_host_metrics(conn: sqlite3.Connection, metrics: HostMetrics) -> None
         """
         INSERT INTO host_metrics
             (timestamp, cpu_percent, ram_percent, disk_io_read_bytes,
-             disk_io_write_bytes, status)
-        VALUES (?, ?, ?, ?, ?, ?)
+             disk_io_write_bytes, net_io_sent_bytes, net_io_recv_bytes,
+             disk_total_gb, disk_used_gb, disk_free_gb, disk_percent, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             metrics.timestamp.isoformat(),
@@ -103,6 +110,12 @@ def _insert_host_metrics(conn: sqlite3.Connection, metrics: HostMetrics) -> None
             metrics.ram_percent,
             metrics.disk_io_read_bytes,
             metrics.disk_io_write_bytes,
+            metrics.net_io_sent_bytes,
+            metrics.net_io_recv_bytes,
+            metrics.disk_total_gb,
+            metrics.disk_used_gb,
+            metrics.disk_free_gb,
+            metrics.disk_percent,
             metrics.status,
         ),
     )
