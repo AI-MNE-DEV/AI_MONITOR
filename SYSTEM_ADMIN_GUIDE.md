@@ -40,6 +40,14 @@ curl http://localhost:8000/health
 | `NOTIFY_TELEGRAM_CHAT_ID` | *(vuoto)* | Chat ID destinazione |
 | `NOTIFY_WEBHOOK_ENABLED` | `false` | Abilita webhook generico |
 | `NOTIFY_WEBHOOK_URL` | *(vuoto)* | URL endpoint POST JSON |
+| `NOTIFY_EMAIL_ENABLED` | `false` | Abilita notifiche email SMTP |
+| `NOTIFY_EMAIL_SMTP_HOST` | *(vuoto)* | Host server SMTP |
+| `NOTIFY_EMAIL_SMTP_PORT` | `587` | Porta SMTP (587=STARTTLS) |
+| `NOTIFY_EMAIL_SMTP_USER` | *(vuoto)* | Username SMTP |
+| `NOTIFY_EMAIL_SMTP_PASS` | *(vuoto)* | Password SMTP |
+| `NOTIFY_EMAIL_FROM` | *(vuoto)* | Indirizzo mittente |
+| `NOTIFY_EMAIL_TO` | *(vuoto)* | Indirizzo destinatario |
+| `NOTIFY_EMAIL_USE_TLS` | `true` | Usa STARTTLS |
 | `NOTIFY_MIN_LEVEL` | `CRITICAL` | Livello minimo: CRITICAL o WARNING |
 | `NOTIFY_HTTP_TIMEOUT` | `10.0` | Timeout HTTP notifiche (secondi) |
 
