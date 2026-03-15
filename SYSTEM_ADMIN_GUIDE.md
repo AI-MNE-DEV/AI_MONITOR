@@ -35,6 +35,8 @@ curl http://localhost:8000/health
 | `ALERT_RAM_WARNING` | `85.0` | Soglia RAM warning (%) |
 | `ALERT_RAM_CRITICAL` | `90.0` | Soglia RAM critical (%) |
 | `ALERT_COOLDOWN_SECONDS` | `60` | Cooldown tra alert ripetuti |
+| `AI_MONITOR_RETENTION_DAYS` | `7` | Giorni di retention metriche DB |
+| `AI_MONITOR_RETENTION_INTERVAL_HOURS` | `6` | Ore tra cicli di pulizia |
 | `NOTIFY_TELEGRAM_ENABLED` | `false` | Abilita notifiche Telegram |
 | `NOTIFY_TELEGRAM_BOT_TOKEN` | *(vuoto)* | Token bot da @BotFather |
 | `NOTIFY_TELEGRAM_CHAT_ID` | *(vuoto)* | Chat ID destinazione |

@@ -25,6 +25,7 @@ from contracts import DockerMetrics, HostMetrics, SystemStatus
 from docker_probe import collect_docker_metrics, listen_docker_events
 from host_probe import collect_host_metrics
 from notifier import Notifier
+from retention import retention_loop
 from storage_engine import StorageEngine
 from ws_streamer import manager
 
@@ -118,6 +119,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Telemetry loop
     telemetry_task = asyncio.create_task(_telemetry_loop())
 
+    # Data retention loop
+    retention_task = asyncio.create_task(retention_loop(_storage._db_path))
+
     # Docker event listener in thread separato
     event_thread = threading.Thread(
         target=listen_docker_events,
@@ -131,10 +135,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Shutdown
     telemetry_task.cancel()
-    try:
-        await telemetry_task
-    except asyncio.CancelledError:
-        pass
+    retention_task.cancel()
+    for task in (telemetry_task, retention_task):
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
     if _notifier:
         await _notifier.stop()
