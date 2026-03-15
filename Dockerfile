@@ -18,11 +18,12 @@ RUN pip install --no-cache-dir --upgrade pip \
        pydantic==2.12.5 \
        psutil==7.0.0 \
        docker==7.1.0 \
-       websockets==16.0
+       websockets==16.0 \
+       httpx==0.28.1
 
 # Copia sorgenti
 COPY contracts.py host_probe.py docker_probe.py storage_engine.py \
-     alert_manager.py ws_streamer.py main.py ./
+     alert_manager.py ws_streamer.py notifier.py retention.py main.py ./
 COPY static/ ./static/
 
 # Crea directory dati con permessi
