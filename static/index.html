@@ -47,11 +47,7 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
 
         .logo {
             font-family: var(--font-mono);
@@ -62,16 +58,10 @@
         }
 
         .global-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 4px;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.3rem 0.8rem; border-radius: 4px;
+            font-family: var(--font-mono); font-size: 0.85rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
         }
 
         .global-status.ok { background: rgba(0,255,136,0.12); color: var(--green); }
@@ -80,26 +70,17 @@
         .global-status.pending { background: rgba(59,130,246,0.12); color: var(--blue); }
 
         .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            display: flex; align-items: center; gap: 1.5rem;
+            font-size: 0.85rem; color: var(--text-secondary);
         }
 
         .live-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            display: inline-block;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--green); display: inline-block;
             transition: opacity 0.3s ease;
         }
 
-        .live-dot.pulse {
-            animation: pulse-dot 1s ease-in-out;
-        }
-
+        .live-dot.pulse { animation: pulse-dot 1s ease-in-out; }
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(1.4); }
@@ -109,251 +90,179 @@
             background: var(--red);
             animation: pulse-red 1.5s ease-in-out infinite;
         }
-
-        @keyframes pulse-red {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .alert-badge {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            padding: 0.2rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            font-family: var(--font-mono); font-weight: 700;
+            padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem;
         }
-
-        .alert-badge.has-alerts {
-            background: var(--red-glow);
-            color: var(--red);
-        }
-
-        .alert-badge.clear {
-            background: rgba(0,255,136,0.08);
-            color: var(--green-dim);
-        }
+        .alert-badge.has-alerts { background: var(--red-glow); color: var(--red); }
+        .alert-badge.clear { background: rgba(0,255,136,0.08); color: var(--green-dim); }
 
         /* === MAIN GRID === */
         .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            max-width: 1600px;
-            margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1rem; padding: 1rem 1.5rem;
+            max-width: 1600px; margin: 0 auto;
         }
 
         /* === CARD === */
         .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1.25rem;
             transition: border-color 0.3s ease;
         }
-
-        .card:hover {
-            border-color: #2d3a4d;
-        }
+        .card:hover { border-color: #2d3a4d; }
 
         .card-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--text-muted);
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
         }
 
-        .card-title .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
+        .card-title .status-dot { width: 6px; height: 6px; border-radius: 50%; }
         .card-title .status-dot.ok { background: var(--green); }
         .card-title .status-dot.degraded { background: var(--yellow); }
         .card-title .status-dot.critical, .card-title .status-dot.failed { background: var(--red); }
         .card-title .status-dot.pending { background: var(--blue); }
 
         /* === METRIC DISPLAY === */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .metric {
-            text-align: center;
-        }
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .metric { text-align: center; }
 
         .metric-value {
-            font-family: var(--font-mono);
-            font-size: 3rem;
-            font-weight: 700;
-            line-height: 1;
-            transition: color 0.3s ease;
+            font-family: var(--font-mono); font-size: 3rem;
+            font-weight: 700; line-height: 1; transition: color 0.3s ease;
         }
-
         .metric-value.ok { color: var(--green); }
         .metric-value.warning { color: var(--yellow); }
         .metric-value.critical { color: var(--red); }
 
         .metric-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-top: 0.4rem;
+            font-size: 0.75rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.4rem;
         }
+        .metric-unit { font-size: 1.2rem; color: var(--text-secondary); }
 
-        .metric-unit {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-        }
-
-        /* === DISK I/O (smaller metrics) === */
+        /* === I/O METRICS (smaller) === */
         .io-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 0.5rem; margin-top: 1rem; padding-top: 1rem;
             border-top: 1px solid var(--border);
         }
-
         .io-metric-value {
-            font-family: var(--font-mono);
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-primary);
+            font-family: var(--font-mono); font-size: 1.3rem;
+            font-weight: 600; color: var(--text-primary);
         }
+
+        /* === DISK USAGE BAR === */
+        .disk-bar-container { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .disk-bar-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+        .disk-bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .disk-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease, background 0.3s ease; }
+        .disk-bar-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem; }
 
         /* === CONTAINER TABLE === */
-        .container-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
+        .container-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .container-table th {
-            text-align: left;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid var(--border);
+            text-align: left; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-muted);
+            padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border);
+            cursor: pointer; user-select: none; white-space: nowrap;
         }
+        .container-table th:hover { color: var(--text-primary); }
+        .container-table th .sort-arrow { font-size: 0.6rem; margin-left: 0.3rem; }
 
         .container-table td {
-            padding: 0.6rem 0.75rem;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            border-bottom: 1px solid rgba(30,41,59,0.5);
+            padding: 0.6rem 0.75rem; font-family: var(--font-mono);
+            font-size: 0.8rem; border-bottom: 1px solid rgba(30,41,59,0.5);
             color: var(--text-primary);
         }
-
         .container-table tr:last-child td { border-bottom: none; }
+        .container-table tr.clickable { cursor: pointer; }
+        .container-table tr.clickable:hover { background: var(--bg-card-hover); }
 
         .container-status {
-            display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px;
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
         }
-
         .container-status.running { background: rgba(0,255,136,0.12); color: var(--green); }
         .container-status.exited { background: rgba(255,170,0,0.12); color: var(--yellow); }
         .container-status.created { background: rgba(59,130,246,0.12); color: var(--blue); }
 
-        .docker-summary {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .docker-stat {
-            text-align: center;
-        }
-
+        .docker-summary { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+        .docker-stat { text-align: center; }
         .docker-stat-value {
-            font-family: var(--font-mono);
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-family: var(--font-mono); font-size: 2.2rem;
+            font-weight: 700; color: var(--text-primary);
         }
 
         /* === ALERTS FEED === */
-        .alerts-card {
-            grid-column: 1 / -1;
-        }
-
+        .alerts-card { grid-column: 1 / -1; }
         .alert-list {
-            max-height: 250px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            max-height: 250px; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
-
         .alert-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 0.75rem;
-            border-bottom: 1px solid rgba(30,41,59,0.5);
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.5);
             transition: background 0.2s ease;
         }
-
         .alert-item:hover { background: var(--bg-card-hover); }
         .alert-item:last-child { border-bottom: none; }
 
         .alert-level {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 0.15rem 0.5rem;
-            border-radius: 3px;
-            min-width: 65px;
-            text-align: center;
+            font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; padding: 0.15rem 0.5rem;
+            border-radius: 3px; min-width: 65px; text-align: center;
         }
-
         .alert-level.WARNING { background: rgba(255,170,0,0.15); color: var(--yellow); }
         .alert-level.CRITICAL { background: var(--red-glow); color: var(--red); }
         .alert-level.INFO { background: rgba(59,130,246,0.12); color: var(--blue); }
 
-        .alert-message {
-            flex: 1;
-            font-size: 0.82rem;
-            color: var(--text-primary);
-        }
-
+        .alert-message { flex: 1; font-size: 0.82rem; color: var(--text-primary); }
         .alert-time {
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            white-space: nowrap;
+            font-family: var(--font-mono); font-size: 0.72rem;
+            color: var(--text-muted); white-space: nowrap;
         }
+        .no-alerts { text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.85rem; }
 
-        .no-alerts {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 2rem;
-            font-size: 0.85rem;
+        /* === LOG MODAL === */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
         }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; width: 90%; max-width: 900px; max-height: 80vh;
+            display: flex; flex-direction: column;
+        }
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+        }
+        .modal-title {
+            font-family: var(--font-mono); font-size: 0.9rem;
+            font-weight: 600; color: var(--text-primary);
+        }
+        .modal-close {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.5rem; cursor: pointer; line-height: 1;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body {
+            flex: 1; overflow-y: auto; padding: 1rem 1.25rem;
+            font-family: var(--font-mono); font-size: 0.75rem;
+            line-height: 1.6; color: var(--text-secondary);
+            white-space: pre-wrap; word-break: break-all;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .modal-body.loading { text-align: center; color: var(--text-muted); padding: 3rem; }
 
         /* === RESPONSIVE === */
         @media (max-width: 900px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
+            .dashboard { grid-template-columns: 1fr; }
             .metric-value { font-size: 2.2rem; }
             .alerts-card { grid-column: 1; }
         }
@@ -398,12 +307,25 @@
         <div class="io-metrics">
             <div class="metric">
                 <div id="diskRead" class="io-metric-value">--</div>
-                <div class="metric-label">DISK READ</div>
+                <div class="metric-label">DISK I/O READ</div>
             </div>
             <div class="metric">
                 <div id="diskWrite" class="io-metric-value">--</div>
-                <div class="metric-label">DISK WRITE</div>
+                <div class="metric-label">DISK I/O WRITE</div>
             </div>
+            <div class="metric">
+                <div id="netSent" class="io-metric-value">--</div>
+                <div class="metric-label">NET TX</div>
+            </div>
+            <div class="metric">
+                <div id="netRecv" class="io-metric-value">--</div>
+                <div class="metric-label">NET RX</div>
+            </div>
+        </div>
+        <div class="disk-bar-container">
+            <div class="disk-bar-label">DISK USAGE</div>
+            <div class="disk-bar-track"><div id="diskBarFill" class="disk-bar-fill" style="width:0%;background:var(--green);"></div></div>
+            <div id="diskBarText" class="disk-bar-text">-- / -- GB (---%)</div>
         </div>
     </section>
 
@@ -423,18 +345,20 @@
                 <div class="metric-label">RUNNING</div>
             </div>
         </div>
-        <div style="max-height: 200px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;">
+        <div style="max-height: 250px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;">
             <table class="container-table">
                 <thead>
                     <tr>
-                        <th>NAME</th>
-                        <th>STATUS</th>
-                        <th>CPU %</th>
-                        <th>RAM MB</th>
+                        <th data-sort="name">NAME <span class="sort-arrow"></span></th>
+                        <th data-sort="status">STATUS <span class="sort-arrow"></span></th>
+                        <th data-sort="cpu_percent">CPU % <span class="sort-arrow"></span></th>
+                        <th data-sort="ram_usage_mb">RAM MB <span class="sort-arrow"></span></th>
+                        <th data-sort="net_io_sent_bytes">NET TX <span class="sort-arrow"></span></th>
+                        <th data-sort="net_io_recv_bytes">NET RX <span class="sort-arrow"></span></th>
                     </tr>
                 </thead>
                 <tbody id="containerList">
-                    <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Waiting for data...</td></tr>
+                    <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Waiting for data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -453,6 +377,17 @@
 
 </main>
 
+<!-- LOG MODAL -->
+<div id="logModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <span id="logModalTitle" class="modal-title">Container Logs</span>
+            <button id="logModalClose" class="modal-close">&times;</button>
+        </div>
+        <div id="logModalBody" class="modal-body loading">Loading logs...</div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -463,6 +398,10 @@
     const ramValue = $('ramValue');
     const diskRead = $('diskRead');
     const diskWrite = $('diskWrite');
+    const netSent = $('netSent');
+    const netRecv = $('netRecv');
+    const diskBarFill = $('diskBarFill');
+    const diskBarText = $('diskBarText');
     const hostStatusDot = $('hostStatusDot');
     const dockerStatusDot = $('dockerStatusDot');
     const alertStatusDot = $('alertStatusDot');
@@ -475,6 +414,15 @@
     const liveDot = $('liveDot');
     const wsStatus = $('wsStatus');
     const clock = $('clock');
+    const logModal = $('logModal');
+    const logModalTitle = $('logModalTitle');
+    const logModalBody = $('logModalBody');
+    const logModalClose = $('logModalClose');
+
+    // === STATE ===
+    let currentContainers = [];
+    let sortColumn = 'name';
+    let sortAsc = true;
 
     // === HELPERS ===
     function formatBytes(bytes) {
@@ -511,6 +459,49 @@
         clock.textContent = new Date().toLocaleTimeString('it-IT', { hour12: false });
     }, 1000);
 
+    // === SORTING ===
+    function sortContainers(containers) {
+        return [...containers].sort((a, b) => {
+            let va = a[sortColumn], vb = b[sortColumn];
+            if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb || '').toLowerCase(); }
+            if (va < vb) return sortAsc ? -1 : 1;
+            if (va > vb) return sortAsc ? 1 : -1;
+            return 0;
+        });
+    }
+
+    document.querySelectorAll('.container-table th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.sort;
+            if (sortColumn === col) { sortAsc = !sortAsc; } else { sortColumn = col; sortAsc = true; }
+            document.querySelectorAll('.container-table th .sort-arrow').forEach(s => s.textContent = '');
+            th.querySelector('.sort-arrow').textContent = sortAsc ? ' \u25B2' : ' \u25BC';
+            renderContainers();
+        });
+    });
+
+    // === LOG MODAL ===
+    logModalClose.addEventListener('click', () => { logModal.classList.remove('active'); });
+    logModal.addEventListener('click', (e) => { if (e.target === logModal) logModal.classList.remove('active'); });
+
+    function openLogModal(containerId, containerName) {
+        logModalTitle.textContent = 'Logs: ' + containerName;
+        logModalBody.textContent = 'Loading logs...';
+        logModalBody.className = 'modal-body loading';
+        logModal.classList.add('active');
+
+        fetch('/api/v1/containers/' + encodeURIComponent(containerId) + '/logs?tail=200')
+            .then(r => r.json())
+            .then(data => {
+                logModalBody.className = 'modal-body';
+                logModalBody.textContent = data.logs || data.error || 'No logs available';
+            })
+            .catch(() => {
+                logModalBody.className = 'modal-body';
+                logModalBody.textContent = 'Failed to load logs';
+            });
+    }
+
     // === UPDATE FUNCTIONS ===
     function updateHost(host) {
         const cpu = host.cpu_percent;
@@ -524,34 +515,56 @@
 
         diskRead.textContent = formatBytes(host.disk_io_read_bytes || 0);
         diskWrite.textContent = formatBytes(host.disk_io_write_bytes || 0);
+        netSent.textContent = formatBytes(host.net_io_sent_bytes || 0);
+        netRecv.textContent = formatBytes(host.net_io_recv_bytes || 0);
+
+        // Disk usage bar
+        const diskPct = host.disk_percent || 0;
+        const diskUsed = host.disk_used_gb || 0;
+        const diskTotal = host.disk_total_gb || 0;
+        diskBarFill.style.width = diskPct + '%';
+        diskBarFill.style.background = diskPct >= 90 ? 'var(--red)' : diskPct >= 75 ? 'var(--yellow)' : 'var(--green)';
+        diskBarText.textContent = diskUsed.toFixed(1) + ' / ' + diskTotal.toFixed(1) + ' GB (' + diskPct.toFixed(0) + '%)';
 
         hostStatusDot.className = 'status-dot ' + (host.status || 'ok');
     }
 
-    function updateDocker(docker) {
-        totalContainers.textContent = docker.total_containers;
-        runningContainers.textContent = docker.running_containers;
-
-        dockerStatusDot.className = 'status-dot ' + (docker.status || 'ok');
-
-        if (!docker.containers || docker.containers.length === 0) {
+    function renderContainers() {
+        if (!currentContainers || currentContainers.length === 0) {
             containerList.innerHTML =
-                '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No containers</td></tr>';
+                '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No containers</td></tr>';
             return;
         }
 
+        const sorted = sortContainers(currentContainers);
         let html = '';
-        for (const c of docker.containers) {
-            const statusClass = c.status === 'running' ? 'running' :
-                                c.status === 'exited' ? 'exited' : 'created';
-            html += '<tr>' +
+        for (const c of sorted) {
+            const statusClass = c.status === 'running' ? 'running' : c.status === 'exited' ? 'exited' : 'created';
+            const clickable = c.status === 'running' ? ' clickable' : '';
+            const onclick = c.status === 'running'
+                ? ' onclick="window.__openLog(\'' + escapeHtml(c.container_id) + '\',\'' + escapeHtml(c.name) + '\')"'
+                : '';
+            html += '<tr class="' + clickable + '"' + onclick + '>' +
                 '<td>' + escapeHtml(c.name) + '</td>' +
                 '<td><span class="container-status ' + statusClass + '">' + escapeHtml(c.status) + '</span></td>' +
                 '<td>' + (c.cpu_percent || 0).toFixed(1) + '</td>' +
                 '<td>' + (c.ram_usage_mb || 0).toFixed(1) + '</td>' +
+                '<td>' + formatBytes(c.net_io_sent_bytes || 0) + '</td>' +
+                '<td>' + formatBytes(c.net_io_recv_bytes || 0) + '</td>' +
                 '</tr>';
         }
         containerList.innerHTML = html;
+    }
+
+    // Expose for onclick in rendered HTML
+    window.__openLog = openLogModal;
+
+    function updateDocker(docker) {
+        totalContainers.textContent = docker.total_containers;
+        runningContainers.textContent = docker.running_containers;
+        dockerStatusDot.className = 'status-dot ' + (docker.status || 'ok');
+        currentContainers = docker.containers || [];
+        renderContainers();
     }
 
     function updateAlerts(alerts) {
@@ -620,9 +633,8 @@
         };
 
         ws.onmessage = function(event) {
-            // Heartbeat pulse
             liveDot.classList.remove('pulse');
-            void liveDot.offsetWidth; // force reflow
+            void liveDot.offsetWidth;
             liveDot.classList.add('pulse');
 
             try {
@@ -634,8 +646,6 @@
                     updateDocker(d.docker);
                     updateAlerts(d.active_alerts || []);
                     updateGlobalStatus(d);
-                } else if (msg.type === 'alert') {
-                    // Flash alert momentaneo gestito dal prossimo system_status
                 }
             } catch (e) {
                 console.error('Parse error:', e);

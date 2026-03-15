@@ -294,6 +294,31 @@ async def get_active_alerts() -> list[dict[str, object]]:
     return [a.model_dump(mode="json") for a in _alert_mgr.active_alerts]
 
 
+@app.get("/api/v1/containers/{container_id}/logs")
+async def get_container_logs(
+    container_id: str,
+    tail: int = Query(default=100, ge=1, le=1000),
+) -> dict[str, object]:
+    """Ritorna le ultime N righe di log di un container Docker.
+
+    Args:
+        container_id: ID o nome del container.
+        tail: Numero di righe (default 100, max 1000).
+    """
+    try:
+        import docker as docker_sdk
+
+        client = docker_sdk.DockerClient.from_env()
+        container = client.containers.get(container_id)
+        logs = container.logs(tail=tail, timestamps=True).decode(
+            "utf-8", errors="replace"
+        )
+        return {"container_id": container_id, "logs": logs, "lines": tail}
+    except Exception as exc:
+        logger.warning("main: errore lettura log container %s: %s", container_id, exc)
+        return {"container_id": container_id, "logs": "", "error": str(exc)}
+
+
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket) -> None:
     """Endpoint WebSocket per lo streaming real-time alla War Room.
