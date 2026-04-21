@@ -69,19 +69,29 @@ def _parse_cpu_percent(stats: dict[str, Any]) -> float:
     return 0.0
 
 
-def _parse_ram_usage_mb(stats: dict[str, Any]) -> float:
-    """Estrae l'utilizzo RAM in MB dai container stats.
+def _parse_ram_usage_mb(stats: dict[str, Any]) -> tuple[float, float, float]:
+    """Estrae l'utilizzo RAM in MB, limite in MB e percentuale dai container stats.
 
     Args:
         stats: Dizionario stats restituito da container.stats(stream=False).
 
     Returns:
-        RAM in MB, 0.0 se non disponibile.
+        Tupla (ram_usage_mb, ram_limit_mb, ram_percent).
     """
     memory_stats = stats.get("memory_stats", {})
     usage_bytes = memory_stats.get("usage", 0)
     cache_bytes = memory_stats.get("stats", {}).get("cache", 0)
-    return round((usage_bytes - cache_bytes) / (1024 * 1024), 2)
+    limit_bytes = memory_stats.get("limit", 0)
+
+    used_bytes = usage_bytes - cache_bytes
+    used_mb = round(used_bytes / (1024 * 1024), 2)
+    limit_mb = round(limit_bytes / (1024 * 1024), 2)
+
+    percent = 0.0
+    if limit_bytes > 0:
+        percent = round((used_bytes / limit_bytes) * 100.0, 2)
+
+    return used_mb, limit_mb, percent
 
 
 def _parse_net_io(stats: dict[str, Any]) -> tuple[int, int]:
@@ -164,11 +174,14 @@ def collect_docker_metrics_sync() -> DockerMetrics:
                 blk_read = 0
                 blk_write = 0
 
+                ram_limit_mb = 0.0
+                ram_pct = 0.0
+
                 if c_status == "running":
                     try:
                         stats = container.stats(stream=False)
                         cpu_pct = _parse_cpu_percent(stats)
-                        ram_mb = _parse_ram_usage_mb(stats)
+                        ram_mb, ram_limit_mb, ram_pct = _parse_ram_usage_mb(stats)
                         net_tx, net_rx = _parse_net_io(stats)
                         blk_read, blk_write = _parse_block_io(stats)
                     except Exception as stats_exc:
@@ -185,6 +198,8 @@ def collect_docker_metrics_sync() -> DockerMetrics:
                         status=c_status,
                         cpu_percent=cpu_pct,
                         ram_usage_mb=ram_mb,
+                        ram_limit_mb=ram_limit_mb,
+                        ram_percent=ram_pct,
                         net_io_sent_bytes=net_tx,
                         net_io_recv_bytes=net_rx,
                         disk_read_bytes=blk_read,
@@ -267,7 +282,7 @@ def listen_docker_events(
     if event_filters is None:
         event_filters = {
             "type": ["container"],
-            "event": ["start", "stop", "die"],
+            "event": ["start", "stop", "die", "oom", "health_status", "kill"],
         }
 
     consecutive_failures = 0

@@ -122,10 +122,27 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Data retention loop
     retention_task = asyncio.create_task(retention_loop(_storage._db_path))
 
+    main_loop = asyncio.get_running_loop()
+
+    def _docker_event_callback(event: dict) -> None:
+        """Callback eseguito dal thread del docker_probe."""
+        if _alert_mgr:
+            alert = _alert_mgr.evaluate_docker_event(event)
+            if alert:
+                # Dispatch dell'allarme nel main thread asincrono
+                async def _dispatch_alert():
+                    if _storage:
+                        _storage.store(alert)
+                    if _notifier:
+                        await _notifier.notify(alert)
+                    await manager.broadcast_alert(alert)
+
+                asyncio.run_coroutine_threadsafe(_dispatch_alert(), main_loop)
+
     # Docker event listener in thread separato
     event_thread = threading.Thread(
         target=listen_docker_events,
-        args=(lambda event: logger.info("docker_event: %s", event),),
+        args=(_docker_event_callback,),
         daemon=True,
         name="docker-event-listener",
     )

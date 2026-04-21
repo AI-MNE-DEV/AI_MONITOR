@@ -21,6 +21,10 @@ CPU_WARNING_THRESHOLD: float = float(os.getenv("ALERT_CPU_WARNING", "90.0"))
 CPU_CRITICAL_THRESHOLD: float = float(os.getenv("ALERT_CPU_CRITICAL", "95.0"))
 RAM_WARNING_THRESHOLD: float = float(os.getenv("ALERT_RAM_WARNING", "85.0"))
 RAM_CRITICAL_THRESHOLD: float = float(os.getenv("ALERT_RAM_CRITICAL", "90.0"))
+DISK_WARNING_THRESHOLD: float = float(os.getenv("ALERT_DISK_WARNING", "85.0"))
+DISK_CRITICAL_THRESHOLD: float = float(os.getenv("ALERT_DISK_CRITICAL", "90.0"))
+CONTAINER_RAM_WARNING_THRESHOLD: float = float(os.getenv("ALERT_CONTAINER_RAM_WARNING", "85.0"))
+CONTAINER_RAM_CRITICAL_THRESHOLD: float = float(os.getenv("ALERT_CONTAINER_RAM_CRITICAL", "90.0"))
 
 # Cooldown in secondi per evitare allarmi duplicati sulla stessa condizione
 ALERT_COOLDOWN_SECONDS: int = int(os.getenv("ALERT_COOLDOWN_SECONDS", "60"))
@@ -83,12 +87,20 @@ class AlertManager:
         cpu_critical: float = CPU_CRITICAL_THRESHOLD,
         ram_warning: float = RAM_WARNING_THRESHOLD,
         ram_critical: float = RAM_CRITICAL_THRESHOLD,
+        disk_warning: float = DISK_WARNING_THRESHOLD,
+        disk_critical: float = DISK_CRITICAL_THRESHOLD,
+        container_ram_warning: float = CONTAINER_RAM_WARNING_THRESHOLD,
+        container_ram_critical: float = CONTAINER_RAM_CRITICAL_THRESHOLD,
         cooldown_seconds: int = ALERT_COOLDOWN_SECONDS,
     ) -> None:
         self._cpu_warning: float = cpu_warning
         self._cpu_critical: float = cpu_critical
         self._ram_warning: float = ram_warning
         self._ram_critical: float = ram_critical
+        self._disk_warning: float = disk_warning
+        self._disk_critical: float = disk_critical
+        self._container_ram_warning: float = container_ram_warning
+        self._container_ram_critical: float = container_ram_critical
         self._cooldown_seconds: int = cooldown_seconds
         self._last_fired: dict[str, datetime] = {}
         self._active_alerts: list[AlertEvent] = []
@@ -221,6 +233,31 @@ class AlertManager:
             if alert:
                 alerts.append(alert)
 
+        # Disk Critical
+        if metrics.disk_percent >= self._disk_critical:
+            alert = self._fire_alert(
+                alert_key="host_disk_critical",
+                level="CRITICAL",
+                source="host",
+                message=f"Spazio Disco al {metrics.disk_percent}% (soglia critica: {self._disk_critical}%)",
+                metric_value=metrics.disk_percent,
+                now=now,
+            )
+            if alert:
+                alerts.append(alert)
+        # Disk Warning
+        elif metrics.disk_percent >= self._disk_warning:
+            alert = self._fire_alert(
+                alert_key="host_disk_warning",
+                level="WARNING",
+                source="host",
+                message=f"Spazio Disco al {metrics.disk_percent}% (soglia warning: {self._disk_warning}%)",
+                metric_value=metrics.disk_percent,
+                now=now,
+            )
+            if alert:
+                alerts.append(alert)
+
         # Degraded status
         if metrics.status == "degraded":
             alert = self._fire_alert(
@@ -261,26 +298,106 @@ class AlertManager:
             if alert:
                 alerts.append(alert)
 
-        # Container con CPU alta
+        # Container con CPU/RAM alta
         for container in metrics.containers:
-            if (
-                container.status == "running"
-                and container.cpu_percent >= self._cpu_critical
-            ):
-                alert = self._fire_alert(
-                    alert_key=f"container_cpu_{container.container_id}",
-                    level="WARNING",
-                    source="docker",
-                    message=(
-                        f"Container '{container.name}' CPU al {container.cpu_percent}%"
-                    ),
-                    metric_value=container.cpu_percent,
-                    now=now,
-                )
-                if alert:
-                    alerts.append(alert)
+            if container.status == "running":
+                if container.cpu_percent >= self._cpu_critical:
+                    alert = self._fire_alert(
+                        alert_key=f"container_cpu_{container.container_id}",
+                        level="WARNING",
+                        source="docker",
+                        message=(
+                            f"Container '{container.name}' CPU al {container.cpu_percent}%"
+                        ),
+                        metric_value=container.cpu_percent,
+                        now=now,
+                    )
+                    if alert:
+                        alerts.append(alert)
+
+                if container.ram_percent >= self._container_ram_critical:
+                    alert = self._fire_alert(
+                        alert_key=f"container_ram_critical_{container.container_id}",
+                        level="CRITICAL",
+                        source="docker",
+                        message=(
+                            f"Container '{container.name}' RAM al {container.ram_percent}% "
+                            f"(soglia critica: {self._container_ram_critical}%)"
+                        ),
+                        metric_value=container.ram_percent,
+                        now=now,
+                    )
+                    if alert:
+                        alerts.append(alert)
+                elif container.ram_percent >= self._container_ram_warning:
+                    alert = self._fire_alert(
+                        alert_key=f"container_ram_warning_{container.container_id}",
+                        level="WARNING",
+                        source="docker",
+                        message=(
+                            f"Container '{container.name}' RAM al {container.ram_percent}% "
+                            f"(soglia warning: {self._container_ram_warning}%)"
+                        ),
+                        metric_value=container.ram_percent,
+                        now=now,
+                    )
+                    if alert:
+                        alerts.append(alert)
 
         return alerts
+
+    def evaluate_docker_event(self, event: dict) -> Optional[AlertEvent]:
+        """Valuta un singolo evento dallo stream Docker e genera allarmi istantanei.
+
+        Args:
+            event: Dizionario raw dell'evento Docker (decode=True).
+
+        Returns:
+            AlertEvent generato se l'evento è critico, altrimenti None.
+        """
+        now = datetime.now(timezone.utc)
+        action = event.get("Action", "")
+        actor = event.get("Actor", {})
+        attributes = actor.get("Attributes", {})
+        container_name = attributes.get("name", "unknown")
+        container_id = actor.get("ID", "unknown")[:12]
+
+        # Container crash (die con exit code != 0)
+        if action == "die":
+            exit_code = attributes.get("exitCode", "0")
+            if exit_code != "0":
+                return self._fire_alert(
+                    alert_key=f"container_crash_{container_id}_{now.timestamp()}",
+                    level="CRITICAL",
+                    source="docker",
+                    message=f"Container '{container_name}' terminato in modo anomalo (exit code {exit_code})",
+                    metric_value=None,
+                    now=now,
+                )
+
+        # Out Of Memory
+        elif action == "oom":
+            return self._fire_alert(
+                alert_key=f"container_oom_{container_id}_{now.timestamp()}",
+                level="CRITICAL",
+                source="docker",
+                message=f"Container '{container_name}' ha esaurito la memoria (OOM Killed)",
+                metric_value=None,
+                now=now,
+            )
+
+        # Healthcheck fallito
+        elif action.startswith("health_status: unhealthy"):
+            return self._fire_alert(
+                alert_key=f"container_unhealthy_{container_id}_{now.timestamp()}",
+                level="WARNING",
+                source="docker",
+                message=f"Container '{container_name}' risulta unhealthy",
+                metric_value=None,
+                now=now,
+            )
+
+        return None
 
     def clear_resolved(self) -> None:
         """Rimuove gli allarmi attivi che non sono più in condizione critica.

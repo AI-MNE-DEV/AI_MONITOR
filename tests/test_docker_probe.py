@@ -89,16 +89,20 @@ class TestParseRamUsageMb:
 
     def test_calculates_ram_mb(self) -> None:
         stats = _make_fake_stats(mem_usage=104_857_600, mem_cache=0)
-        result = _parse_ram_usage_mb(stats)
-        assert result == 100.0  # 100 MB
+        used_mb, limit_mb, percent = _parse_ram_usage_mb(stats)
+        assert used_mb == 100.0  # 100 MB
+        assert limit_mb == 0.0
+        assert percent == 0.0
 
     def test_subtracts_cache(self) -> None:
         stats = _make_fake_stats(mem_usage=104_857_600, mem_cache=52_428_800)
-        result = _parse_ram_usage_mb(stats)
-        assert result == 50.0  # 50 MB
+        used_mb, limit_mb, percent = _parse_ram_usage_mb(stats)
+        assert used_mb == 50.0  # 50 MB
+        assert limit_mb == 0.0
+        assert percent == 0.0
 
     def test_returns_zero_on_empty(self) -> None:
-        assert _parse_ram_usage_mb({}) == 0.0
+        assert _parse_ram_usage_mb({}) == (0.0, 0.0, 0.0)
 
 
 class TestCollectDockerMetricsSync:
