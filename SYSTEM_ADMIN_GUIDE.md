@@ -34,6 +34,10 @@ curl http://localhost:8000/health
 | `ALERT_CPU_CRITICAL` | `95.0` | Soglia CPU critical (%) |
 | `ALERT_RAM_WARNING` | `85.0` | Soglia RAM warning (%) |
 | `ALERT_RAM_CRITICAL` | `90.0` | Soglia RAM critical (%) |
+| `ALERT_DISK_WARNING` | `85.0` | Soglia Disco warning (%) |
+| `ALERT_DISK_CRITICAL` | `90.0` | Soglia Disco critical (%) |
+| `ALERT_CONTAINER_RAM_WARNING` | `85.0` | Soglia RAM container warning (%) |
+| `ALERT_CONTAINER_RAM_CRITICAL` | `90.0` | Soglia RAM container critical (%) |
 | `ALERT_COOLDOWN_SECONDS` | `60` | Cooldown tra alert ripetuti |
 | `AI_MONITOR_RETENTION_DAYS` | `7` | Giorni di retention metriche DB |
 | `AI_MONITOR_RETENTION_INTERVAL_HOURS` | `6` | Ore tra cicli di pulizia |

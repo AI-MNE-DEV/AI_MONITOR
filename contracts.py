@@ -30,6 +30,8 @@ class ContainerMetrics(BaseModel):
     status: str = Field(..., description="Stato del container: running, exited, ghost")
     cpu_percent: float = Field(default=0.0)
     ram_usage_mb: float = Field(default=0.0)
+    ram_limit_mb: float = Field(default=0.0, description="Limite RAM container in MB")
+    ram_percent: float = Field(default=0.0, description="Percentuale utilizzo RAM container")
     net_io_sent_bytes: int = Field(default=0, description="Network TX container")
     net_io_recv_bytes: int = Field(default=0, description="Network RX container")
     disk_read_bytes: int = Field(default=0, description="Block I/O read")
