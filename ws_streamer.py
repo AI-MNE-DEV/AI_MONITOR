@@ -66,18 +66,25 @@ class ConnectionManager:
         Args:
             data: Dizionario JSON-serializzabile da inviare.
         """
-        stale: list[WebSocket] = []
+        if not self._connections:
+            return
 
-        for ws in self._connections:
+        async def _send_to_ws(ws: WebSocket) -> WebSocket | None:
             try:
                 await asyncio.wait_for(ws.send_json(data), timeout=5.0)
+                return None
             except (WebSocketDisconnect, RuntimeError, asyncio.TimeoutError) as exc:
                 logger.warning("ws_streamer: rimozione client stale: %s", exc)
-                stale.append(ws)
+                return ws
             except Exception as exc:
                 logger.error("ws_streamer: errore broadcast inatteso: %s", exc)
-                stale.append(ws)
+                return ws
 
+        # Invia a tutti i client in parallelo per evitare che client lenti
+        # blocchino l'intero loop di broadcast.
+        results = await asyncio.gather(*(_send_to_ws(ws) for ws in self._connections))
+
+        stale = [ws for ws in results if ws is not None]
         for ws in stale:
             self.disconnect(ws)
 
