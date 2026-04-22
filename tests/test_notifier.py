@@ -133,13 +133,19 @@ class TestNotifierInit:
 
     def test_email_enabled_without_host_disables(self):
         n = Notifier(
-            email_enabled=True, email_smtp_host="", email_from="a@b", email_to="c@d"
+            email_enabled=True,
+            email_smtp_host="",
+            email_from="a@b",
+            email_to=["c@d"],
         )
         assert n._email_enabled is False
 
     def test_email_enabled_without_from_disables(self):
         n = Notifier(
-            email_enabled=True, email_smtp_host="smtp.x", email_from="", email_to="c@d"
+            email_enabled=True,
+            email_smtp_host="smtp.x",
+            email_from="",
+            email_to=["c@d"],
         )
         assert n._email_enabled is False
 
@@ -148,7 +154,7 @@ class TestNotifierInit:
             email_enabled=True,
             email_smtp_host="smtp.example.com",
             email_from="monitor@example.com",
-            email_to="admin@example.com",
+            email_to=["admin@example.com"],
         )
         assert n._email_enabled is True
         assert n.is_active is True
@@ -326,17 +332,45 @@ async def test_notify_inactive_notifier_is_noop():
 class TestBuildEmailMessage:
     def test_email_subject_contains_level(self):
         alert = _make_alert()
-        msg = _build_email_message(alert, "from@x.com", "to@x.com")
-        assert "[CRITICAL]" in msg["Subject"]
-        assert msg["From"] == "from@x.com"
-        assert msg["To"] == "to@x.com"
+        raw_msg = _build_email_message(alert, "from@x.com", ["to@x.com"])
+        assert "Subject: [CRITICAL] AI Monitor: host -" in raw_msg
+        assert "From: from@x.com" in raw_msg
+        assert "To: to@x.com" in raw_msg
 
     def test_email_body_contains_details(self):
         alert = _make_alert()
-        msg = _build_email_message(alert, "f@x.com", "t@x.com")
-        body = msg.get_content()
-        assert "97.0%" in body
-        assert "host" in body
+        raw_msg = _build_email_message(alert, "f@x.com", ["t@x.com"])
+        assert "97.0%" in raw_msg
+        assert "Source:  host" in raw_msg
+        assert "Level:   CRITICAL" in raw_msg
+
+    def test_email_multiple_recipients(self):
+        alert = _make_alert()
+        to_addrs = ["admin1@x.com", "admin2@x.com"]
+        raw_msg = _build_email_message(alert, "from@x.com", to_addrs)
+        assert "To: admin1@x.com, admin2@x.com" in raw_msg
+
+    def test_email_warning_level(self):
+        alert = _make_alert(level="WARNING")
+        raw_msg = _build_email_message(alert, "from@x.com", ["to@x.com"])
+        assert "Subject: [WARNING]" in raw_msg
+        assert "Level:   WARNING" in raw_msg
+
+    def test_email_none_metric_value(self):
+        alert = _make_alert()
+        alert = alert.model_copy(update={"metric_value": None})
+        raw_msg = _build_email_message(alert, "from@x.com", ["to@x.com"])
+        assert "Value:   N/A" in raw_msg
+
+    def test_email_subject_truncation(self):
+        alert = _make_alert()
+        long_message = "This is a very long message that should definitely be truncated because it exceeds the sixty characters limit"
+        alert = alert.model_copy(update={"message": long_message})
+        raw_msg = _build_email_message(alert, "from@x.com", ["to@x.com"])
+        # Subject should contain exactly 60 chars of message
+        expected_part = long_message[:60]
+        assert expected_part in raw_msg
+        assert long_message[61:] not in raw_msg.splitlines()[0]  # Not in Subject line
 
 
 @pytest.mark.asyncio
@@ -345,7 +379,7 @@ async def test_notify_email_success():
         email_enabled=True,
         email_smtp_host="smtp.example.com",
         email_from="monitor@example.com",
-        email_to="admin@example.com",
+        email_to=["admin@example.com"],
         email_use_tls=False,
     )
     await n.start()
@@ -355,7 +389,7 @@ async def test_notify_email_success():
         await n.notify(_make_alert())
 
     assert n.sent_count == 1
-    mock_server.send_message.assert_called_once()
+    mock_server.sendmail.assert_called_once()
 
     await n.stop()
 
@@ -366,7 +400,7 @@ async def test_email_smtp_error_does_not_raise():
         email_enabled=True,
         email_smtp_host="smtp.example.com",
         email_from="monitor@example.com",
-        email_to="admin@example.com",
+        email_to=["admin@example.com"],
     )
     await n.start()
 
@@ -389,7 +423,7 @@ async def test_notify_all_three_channels():
         email_enabled=True,
         email_smtp_host="smtp.example.com",
         email_from="m@x.com",
-        email_to="a@x.com",
+        email_to=["a@x.com"],
         email_use_tls=False,
     )
     await n.start()
@@ -498,7 +532,7 @@ async def test_telegram_multi_recipient_with_webhook_and_email():
         email_enabled=True,
         email_smtp_host="smtp.example.com",
         email_from="m@x.com",
-        email_to="a@x.com",
+        email_to=["a@x.com"],
         email_use_tls=False,
     )
     await n.start()

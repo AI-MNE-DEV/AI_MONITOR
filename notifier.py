@@ -37,7 +37,9 @@ EMAIL_SMTP_PORT: int = int(os.getenv("NOTIFY_EMAIL_SMTP_PORT", "587"))
 EMAIL_SMTP_USER: str = os.getenv("NOTIFY_EMAIL_SMTP_USER", "")
 EMAIL_SMTP_PASS: str = os.getenv("NOTIFY_EMAIL_SMTP_PASS", "")
 EMAIL_FROM: str = os.getenv("NOTIFY_EMAIL_FROM", "")
-EMAIL_TO: str = os.getenv("NOTIFY_EMAIL_TO", "")
+EMAIL_TO: list[str] = [
+    addr.strip() for addr in os.getenv("NOTIFY_EMAIL_TO", "").split(",") if addr.strip()
+]
 EMAIL_USE_TLS: bool = os.getenv("NOTIFY_EMAIL_USE_TLS", "true").lower() == "true"
 
 # Livello minimo per inviare notifiche: CRITICAL o WARNING
@@ -85,14 +87,14 @@ def _build_webhook_payload(alert: AlertEvent) -> dict:
 
 
 def _build_email_message(
-    alert: AlertEvent, from_addr: str, to_addr: str
-) -> EmailMessage:
-    """Costruisce un EmailMessage per l'alert."""
+    alert: AlertEvent, from_addr: str, to_addrs: list[str]
+) -> str:
+    """Costruisce l'oggetto MIME per l'email come stringa."""
     msg = EmailMessage()
     icon = "[CRITICAL]" if alert.level == "CRITICAL" else "[WARNING]"
     msg["Subject"] = f"{icon} AI Monitor: {alert.source} - {alert.message[:60]}"
     msg["From"] = from_addr
-    msg["To"] = to_addr
+    msg["To"] = ", ".join(to_addrs)
     value_str = (
         f"{alert.metric_value:.1f}%" if alert.metric_value is not None else "N/A"
     )
@@ -106,7 +108,7 @@ def _build_email_message(
         f"Time:    {alert.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
         f"ID:      {alert.id}\n"
     )
-    return msg
+    return msg.as_string()
 
 
 class Notifier:
@@ -129,7 +131,7 @@ class Notifier:
         email_smtp_user: str = EMAIL_SMTP_USER,
         email_smtp_pass: str = EMAIL_SMTP_PASS,
         email_from: str = EMAIL_FROM,
-        email_to: str = EMAIL_TO,
+        email_to: list[str] | None = None,
         email_use_tls: bool = EMAIL_USE_TLS,
         min_level: str = NOTIFY_MIN_LEVEL,
         http_timeout: float = _HTTP_TIMEOUT,
@@ -149,7 +151,9 @@ class Notifier:
         self._email_smtp_user = email_smtp_user
         self._email_smtp_pass = email_smtp_pass
         self._email_from = email_from
-        self._email_to = email_to
+        self._email_to: list[str] = (
+            email_to if email_to is not None else list(EMAIL_TO)
+        )
         self._email_use_tls = email_use_tls
         self._min_level = min_level
         self._http_timeout = http_timeout
@@ -300,7 +304,7 @@ class Notifier:
 
     def _send_email_sync(self, alert: AlertEvent) -> None:
         """Invio SMTP sincrono (eseguito via asyncio.to_thread)."""
-        msg = _build_email_message(alert, self._email_from, self._email_to)
+        raw_msg = _build_email_message(alert, self._email_from, self._email_to)
         with smtplib.SMTP(
             self._email_smtp_host, self._email_smtp_port, timeout=10
         ) as server:
@@ -308,7 +312,7 @@ class Notifier:
                 server.starttls()
             if self._email_smtp_user and self._email_smtp_pass:
                 server.login(self._email_smtp_user, self._email_smtp_pass)
-            server.send_message(msg)
+            server.sendmail(self._email_from, self._email_to, raw_msg)
 
     async def _send_email(self, alert: AlertEvent) -> None:
         """Invia un'email alert via SMTP in un thread separato."""
