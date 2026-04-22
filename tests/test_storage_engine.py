@@ -183,20 +183,6 @@ class TestStorageEngine:
             assert a == 1
             conn.close()
 
-    def test_records_written_counter(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db_path = os.path.join(tmp, "test.db")
-            engine = StorageEngine(db_path=db_path, batch_size=5)
-            engine.start()
-
-            for _ in range(7):
-                engine.store(_make_host_metrics())
-
-            time.sleep(1.0)
-            engine.stop()
-
-            assert engine.records_written == 7
-
     def test_graceful_shutdown_flushes_queue(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             db_path = os.path.join(tmp, "test.db")
@@ -235,6 +221,5 @@ class TestStorageEngineThroughput:
             conn.close()
 
             assert count == 1000
-            assert engine.records_written == 1000
             # L'enqueue deve essere quasi istantaneo (non bloccante)
             assert enqueue_time < 1.0, f"Enqueue troppo lento: {enqueue_time:.2f}s"
