@@ -220,16 +220,6 @@ class StorageEngine:
         self._conn: Optional[sqlite3.Connection] = None
         self._records_written: int = 0
 
-    @property
-    def records_written(self) -> int:
-        """Numero totale di record scritti dal boot."""
-        return self._records_written
-
-    @property
-    def queue_size(self) -> int:
-        """Numero di record in attesa nella coda."""
-        return self._queue.qsize()
-
     def start(self) -> None:
         """Avvia il writer thread e inizializza il DB.
 
